@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -516,8 +516,9 @@ namespace MaterialChartPlugin.ViewModels
         public async void Initialize()
         {
             await materialManager.Initialize();
+			RefleshData();
 
-            var history = materialManager.Log.History;
+			var history = materialManager.Log.History;
 
             // データ初期読み込み
             logChangedListener = new PropertyChangedEventListener(materialManager.Log)
@@ -541,84 +542,93 @@ namespace MaterialChartPlugin.ViewModels
                         { nameof(materialManager.ImprovementMaterials),  (_,__) => RaisePropertyChanged(nameof(ImprovementMaterials)) },
                         { nameof(materialManager.DevelopmentMaterials),  (_,__) => RaisePropertyChanged(nameof(DevelopmentMaterials)) },
                         { nameof(materialManager.InstantBuildMaterials),  (_,__) => RaisePropertyChanged(nameof(InstantBuildMaterials)) },
-                        {
-                            // materialManagerの初期化が完了したら、DisplayedPeriodの変更時に更新を行うよう設定
-                            nameof(materialManager.IsAvailable),
-                            (_,__) => ChartSettings.DisplayedPeriod.Subscribe(___ =>
-                                {
-                                    RefleshData();
-                                    RaisePropertyChanged(nameof(DisplayedPeriod));
-                                }).AddTo(this)
-                        }
+                        //{
+                        //    // materialManagerの初期化が完了したら、DisplayedPeriodの変更時に更新を行うよう設定
+                        //    nameof(materialManager.IsAvailable),
+                        //    (_,__) => ChartSettings.DisplayedPeriod.Subscribe(___ =>
+                        //        {
+                        //            RefleshData();
+                        //            RaisePropertyChanged(nameof(DisplayedPeriod));
+                        //        }).AddTo(this)
+                        //}
                     };
 
+			// この段階でmaterialManagerの初期化は完了しているので、DisplayedPeriodの変更時に更新を行うよう設定
+			ChartSettings.DisplayedPeriod.Subscribe(___ =>
+			{
+				if(materialManager.IsAvailable)
+				{
+					RefleshData();
+					RaisePropertyChanged(nameof(DisplayedPeriod));
+				}
+			}).AddTo(this);
 
-            // 表示設定変更の通知設定
-            viewSettingChangedListener = new PropertyChangedEventListener(this)
-            {
-                {
-                    nameof(this.IsYMinFixedAtZero), (_, __) =>
-                    {
-                        if (materialManager.Log.HasLoaded)
-                                RefleshData();
-                    }
-                },
-                {
-                    nameof(this.IsFuelChartEnable), (_, __) =>
-                    {
-                        if (materialManager.Log.HasLoaded)
-                                RefleshData();
-                    }
-                },
-                {
-                    nameof(this.IsAmmunitionChartEnable), (_, __) =>
-                    {
-                        if (materialManager.Log.HasLoaded)
-                                RefleshData();
-                    }
-                },
-                {
-                    nameof(this.IsSteelChartEnable), (_, __) =>
-                    {
-                        if (materialManager.Log.HasLoaded)
-                                RefleshData();
-                    }
-                },
-                {
-                    nameof(this.IsBauxiteChartEnable), (_, __) =>
-                    {
-                        if (materialManager.Log.HasLoaded)
-                                RefleshData();
-                    }
-                },
-                {
-                    nameof(this.IsRepairToolChartEnable), (_, __) =>
-                    {
-                        if (materialManager.Log.HasLoaded)
-                                RefleshData();
-                    }
-                },
-                {
-                    nameof(this.IsImprovementToolChartEnable), (_, __) =>
-                    {
-                        if (materialManager.Log.HasLoaded)
-                                RefleshData();
-                    }
-                },
-                {
-                    nameof(this.IsDevelopmentToolChartEnable), (_, __) =>
-                    {
-                        if (materialManager.Log.HasLoaded)
-                                RefleshData();
-                    }
-                },
-                {
-                    nameof(this.IsInstantBuildToolChartEnable), (_, __) =>
-                    {
-                        if (materialManager.Log.HasLoaded)
-                                RefleshData();
-                    }
-                }
+			// 表示設定変更の通知設定
+			viewSettingChangedListener = new PropertyChangedEventListener(this)
+			{
+				{
+					nameof(this.IsYMinFixedAtZero), (_, __) =>
+					{
+						if (materialManager.Log.HasLoaded)
+								RefleshData();
+					}
+				},
+				{
+					nameof(this.IsFuelChartEnable), (_, __) =>
+					{
+						if (materialManager.Log.HasLoaded)
+								RefleshData();
+					}
+				},
+				{
+					nameof(this.IsAmmunitionChartEnable), (_, __) =>
+					{
+						if (materialManager.Log.HasLoaded)
+								RefleshData();
+					}
+				},
+				{
+					nameof(this.IsSteelChartEnable), (_, __) =>
+					{
+						if (materialManager.Log.HasLoaded)
+								RefleshData();
+					}
+				},
+				{
+					nameof(this.IsBauxiteChartEnable), (_, __) =>
+					{
+						if (materialManager.Log.HasLoaded)
+								RefleshData();
+					}
+				},
+				{
+					nameof(this.IsRepairToolChartEnable), (_, __) =>
+					{
+						if (materialManager.Log.HasLoaded)
+								RefleshData();
+					}
+				},
+				{
+					nameof(this.IsImprovementToolChartEnable), (_, __) =>
+					{
+						if (materialManager.Log.HasLoaded)
+								RefleshData();
+					}
+				},
+				{
+					nameof(this.IsDevelopmentToolChartEnable), (_, __) =>
+					{
+						if (materialManager.Log.HasLoaded)
+								RefleshData();
+					}
+				},
+				{
+					nameof(this.IsInstantBuildToolChartEnable), (_, __) =>
+					{
+						if (materialManager.Log.HasLoaded)
+								RefleshData();
+					}
+				}
             };
 
             // データ更新設定

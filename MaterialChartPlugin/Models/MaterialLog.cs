@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.Xml;
 using Livet;
@@ -16,15 +17,14 @@ namespace MaterialChartPlugin.Models
 {
     public class MaterialLog : NotificationObject
     {
-        static readonly string localDirectoryPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "terry_u16", "MaterialChartPlugin");
+		static readonly string localDirectoryPath =
+			Directory.GetParent(Assembly.GetExecutingAssembly().Location).FullName;
 
         public static readonly string ExportDirectoryPath = "MaterialChartPlugin";
 
-        static readonly string saveFileName = "materiallog.dat";
+        private static readonly string saveFileBase = "materiallog";
 
-        static string SaveFilePath => Path.Combine(localDirectoryPath, saveFileName);
+		private static string SaveFilePath;
 
         private MaterialChartPlugin plugin;
 
@@ -53,8 +53,16 @@ namespace MaterialChartPlugin.Models
         }
 
         public async Task LoadAsync()
-        {
-            await LoadAsync(SaveFilePath, null);
+		{
+			// サーバと通信するまで待つ
+			while(!KanColleClient.Current.IsStarted)
+			{
+				await Task.Delay(100);
+			}
+
+			var saveFileName = $"{saveFileBase}_{KanColleClient.Current.Homeport.Admiral.MemberId}.dat";
+			SaveFilePath = Path.Combine(localDirectoryPath, saveFileName);
+			await LoadAsync(SaveFilePath, null);
         }
 
         private async Task LoadAsync(string filePath, Action onSuccess)
