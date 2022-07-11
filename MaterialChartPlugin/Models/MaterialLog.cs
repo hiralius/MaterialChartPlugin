@@ -45,7 +45,7 @@ namespace MaterialChartPlugin.Models
         }
         #endregion
 
-        public ObservableCollection<TimeMaterialsPair> History { get; private set; }
+        public ObservableCollection<TimeMaterialsPair> History { get; set; }
 
         public MaterialLog(MaterialChartPlugin plugin)
         {
@@ -65,7 +65,7 @@ namespace MaterialChartPlugin.Models
 			await LoadAsync(SaveFilePath, null);
         }
 
-        private async Task LoadAsync(string filePath, Action onSuccess)
+        public async Task LoadAsync(string filePath, Action onSuccess)
         {
             this.HasLoaded = false;
 
@@ -122,7 +122,7 @@ namespace MaterialChartPlugin.Models
             }
         }
 
-        private async Task SaveAsync(string directoryPath, string filePath, Action onSuccess)
+        public async Task SaveAsync(string directoryPath, string filePath, Action onSuccess)
         {
             try
             {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using ProtoBuf;
 
@@ -11,55 +11,55 @@ namespace MaterialChartPlugin.Models
         /// 時刻
         /// </summary>
         [ProtoMember(1)]
-        public DateTime DateTime { get; private set; }
+        public DateTime DateTime { get; protected set; }
 
         /// <summary>
         /// 燃料
         /// </summary>
         [ProtoMember(2)]
-        public int Fuel { get; private set; }
+        public int Fuel { get; protected set; }
 
         /// <summary>
         /// 弾薬
         /// </summary>
         [ProtoMember(3)]
-        public int Ammunition { get; private set; }
+        public int Ammunition { get; protected set; }
 
         /// <summary>
         /// 鋼材
         /// </summary>
         [ProtoMember(4)]
-        public int Steel { get; private set; }
+        public int Steel { get; protected set; }
 
         /// <summary>
         /// ボーキサイト
         /// </summary>
         [ProtoMember(5)]
-        public int Bauxite { get; private set; }
+        public int Bauxite { get; protected set; }
 
         /// <summary>
         /// 高速修復材
         /// </summary>
         [ProtoMember(6)]
-        public int RepairTool { get; private set; }
+        public int RepairTool { get; protected set; }
 
         /// <summary>
         /// 開発資材
         /// </summary>
         [ProtoMember(7)]
-        public int DevelopmentTool { get; private set; }
+        public int DevelopmentTool { get; protected set; }
 
         /// <summary>
         /// 高速建造材
         /// </summary>
         [ProtoMember(8)]
-        public int InstantBuildTool { get; private set; }
+        public int InstantBuildTool { get; protected set; }
 
         /// <summary>
         /// 改修資材
         /// </summary>
         [ProtoMember(9)]
-        public int ImprovementTool { get; private set; }
+        public int ImprovementTool { get; protected set; }
 
         public int MostMaterial(Boolean[] visible)
         {
