@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Livet;
 using Livet.EventListeners;
 using MetroTrilithon.Mvvm;
@@ -18,7 +16,7 @@ using MaterialChartPlugin.Properties;
 
 namespace MaterialChartPlugin.ViewModels
 {
-    public class ToolViewModel : ViewModel
+	public class ToolViewModel : ViewModel
     {
         private MaterialChartPlugin plugin;
 
@@ -631,12 +629,13 @@ namespace MaterialChartPlugin.ViewModels
 				}
             };
 
-            // データ更新設定
-            Observable.FromEvent<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>
+			// データ更新設定
+			Observable.FromEvent<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>
                 (h => (sender, e) => h(e), h => history.CollectionChanged += h, h => history.CollectionChanged -= h)
                 .Where(_ => materialManager.Log.HasLoaded)
                 .Throttle(TimeSpan.FromMilliseconds(10))
-                .Subscribe(_ => UpdateData(history.Last()));
+                .Subscribe(_ => UpdateData(history.Last())
+				);
         }
 
         /// <summary>
