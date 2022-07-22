@@ -6,8 +6,7 @@ using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Reflection;
-using System.Runtime.Serialization;
-using System.Xml;
+using System.Xml.Serialization;
 using Livet;
 using ProtoBuf;
 using Grabacr07.KanColleWrapper;
@@ -24,12 +23,17 @@ namespace MaterialChartPlugin.Models
 
         private static readonly string saveFileBase = "materiallog";
 
+		private const string BIN_EXT = ".dat";
+		private const string XML_EXT = ".xml";
+
 		private static string SaveFilePath;
 
         private MaterialChartPlugin plugin;
 
-        #region HasLoaded変更通知プロパティ
-        private bool _HasLoaded = false;
+		private readonly XmlSerializer serializer = new XmlSerializer(typeof(ObservableCollection<TimeMaterialsPair>));
+
+		#region HasLoaded変更通知プロパティ
+		private bool _HasLoaded = false;
 
         public bool HasLoaded
         {
@@ -60,10 +64,18 @@ namespace MaterialChartPlugin.Models
 				await Task.Delay(100);
 			}
 
-			var saveFileName = $"{saveFileBase}_{KanColleClient.Current.Homeport.Admiral.MemberId}.dat";
-			SaveFilePath = Path.Combine(localDirectoryPath, saveFileName);
-			await LoadAsync(SaveFilePath, null);
-        }
+			var saveFileName = $"{saveFileBase}_{KanColleClient.Current.Homeport.Admiral.MemberId}";
+			SaveFilePath = Path.Combine(localDirectoryPath, saveFileName + XML_EXT);
+			if (File.Exists(SaveFilePath))
+			{
+				await LoadAsync(SaveFilePath, null);
+			}
+			else
+			{
+				SaveFilePath = Path.Combine(localDirectoryPath, saveFileName + BIN_EXT);
+				await LoadAsync(SaveFilePath, null);
+			}
+		}
 
         public async Task LoadAsync(string filePath, Action onSuccess)
         {
@@ -75,8 +87,15 @@ namespace MaterialChartPlugin.Models
                 {
                     using (var stream = File.OpenRead(filePath))
                     {
-                        this.History = await Task.Run(() => Serializer.Deserialize<ObservableCollection<TimeMaterialsPair>>(stream));
-                    }
+						if(Path.GetExtension(filePath) == XML_EXT)
+						{
+							this.History = await Task.Run(() => serializer.Deserialize(stream) as ObservableCollection<TimeMaterialsPair>);
+						}
+						else
+						{
+							this.History = await Task.Run(() => Serializer.Deserialize<ObservableCollection<TimeMaterialsPair>>(stream));
+						}
+					}
                     onSuccess?.Invoke();
                 }
                 catch (ProtoException ex)
@@ -111,6 +130,9 @@ namespace MaterialChartPlugin.Models
         {
             try
             {
+				// 保存はXML形式のみ
+				SaveFilePath = Path.ChangeExtension(SaveFilePath, XML_EXT);
+
                 await SaveAsync(localDirectoryPath, SaveFilePath, null);
             }
             catch (IOException ex)
@@ -135,10 +157,11 @@ namespace MaterialChartPlugin.Models
                 // 今後ネジみたいに新しい資材が入ってくると対応が面倒なのでやめた
                 using (var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
                 {
-                    await Task.Run(() => Serializer.Serialize(stream, History));
-                }
+                    //await Task.Run(() => Serializer.Serialize(stream, History));
+					await Task.Run(() => serializer.Serialize(stream, History));
+				}
 
-                onSuccess?.Invoke();
+				onSuccess?.Invoke();
             }
             catch (IOException ex)
             {
