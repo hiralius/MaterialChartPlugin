@@ -184,6 +184,7 @@
     <Compile Include="Models\ChartPoint.cs" />
     <Compile Include="Models\Settings\ChartSettings.cs" />
     <Compile Include="Models\Settings\SettingsProviders.cs" />
+    <Compile Include="Models\SplitInfo.cs" />
     <Compile Include="Models\TimeMaterialsPair.cs" />
     <Compile Include="Models\Utilities\ChartExtensions.cs" />
     <Compile Include="Models\Utilities\ChartUtilities.cs" />

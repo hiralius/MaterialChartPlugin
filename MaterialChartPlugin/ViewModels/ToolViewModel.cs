@@ -13,6 +13,7 @@ using System.Reactive.Linq;
 using System.Windows;
 using Microsoft.Win32;
 using MaterialChartPlugin.Properties;
+using System.ComponentModel;
 
 namespace MaterialChartPlugin.ViewModels
 {
@@ -20,23 +21,23 @@ namespace MaterialChartPlugin.ViewModels
     {
         private MaterialChartPlugin plugin;
 
-        public MaterialManager materialManager { get; }
+        public MaterialManager MaterialManager { get; }
 
-        public int Fuel => materialManager.Fuel;
+        public int Fuel => MaterialManager.Fuel;
 
-        public int Ammunition => materialManager.Ammunition;
+        public int Ammunition => MaterialManager.Ammunition;
 
-        public int Steel => materialManager.Steel;
+        public int Steel => MaterialManager.Steel;
 
-        public int Bauxite => materialManager.Bauxite;
+        public int Bauxite => MaterialManager.Bauxite;
 
-        public int RepairTool => materialManager.RepairTool;
+        public int RepairTool => MaterialManager.RepairTool;
 
-        public int DevelopmentMaterials => materialManager.DevelopmentMaterials;
+        public int DevelopmentMaterials => MaterialManager.DevelopmentMaterials;
 
-        public int ImprovementMaterials => materialManager.ImprovementMaterials;
+        public int ImprovementMaterials => MaterialManager.ImprovementMaterials;
 
-        public int InstantBuildMaterials => materialManager.InstantBuildMaterials;
+        public int InstantBuildMaterials => MaterialManager.InstantBuildMaterials;
 
 
         #region FuelSeries変更通知プロパティ
@@ -478,13 +479,15 @@ namespace MaterialChartPlugin.ViewModels
 
         public IReadOnlyCollection<DisplayViewModel<DisplayedPeriod>> DisplayedPeriods { get; }
 
-        int mostMaterial = 0;
+		public SplitInfo Split { get; private set; }
 
-        int minMaterial = 0;
+		private int mostMaterial = 0;
 
-        int mostTool = 0;
+        private int minMaterial = 0;
 
-        int minTool = 0;
+        private int mostTool = 0;
+
+        private int minTool = 0;
 
         PropertyChangedEventListener managerChangedListener;
 
@@ -496,7 +499,7 @@ namespace MaterialChartPlugin.ViewModels
         {
             this.plugin = plugin;
 
-            this.materialManager = new MaterialManager(plugin);
+            this.MaterialManager = new MaterialManager(plugin);
 
             this.DisplayedPeriods = new List<DisplayViewModel<DisplayedPeriod>>()
             {
@@ -513,33 +516,36 @@ namespace MaterialChartPlugin.ViewModels
 
         public async void Initialize()
         {
-            await materialManager.Initialize();
+			await MaterialManager.Initialize();
 			RefleshData();
 
-			var history = materialManager.Log.History;
+			Split = new SplitInfo(MaterialManager);
+			Split.PropertyChanged += Split_PropertyChanged;
+
+			var history = MaterialManager.Log.History;
 
             // データ初期読み込み
-            logChangedListener = new PropertyChangedEventListener(materialManager.Log)
+            logChangedListener = new PropertyChangedEventListener(MaterialManager.Log)
                 {
-                    { nameof(materialManager.Log.HasLoaded), (_, __) =>
+                    { nameof(MaterialManager.Log.HasLoaded), (_, __) =>
                         {
-                            if (materialManager.Log.HasLoaded)
+                            if (MaterialManager.Log.HasLoaded)
                                 RefleshData();
                         }
                     }
                 };
 
             // 資材データの通知設定
-            managerChangedListener = new PropertyChangedEventListener(materialManager)
+            managerChangedListener = new PropertyChangedEventListener(MaterialManager)
                     {
-                        { nameof(materialManager.Fuel),  (_,__) => RaisePropertyChanged(nameof(Fuel)) },
-                        { nameof(materialManager.Ammunition),  (_,__) => RaisePropertyChanged(nameof(Ammunition)) },
-                        { nameof(materialManager.Steel),  (_,__) => RaisePropertyChanged(nameof(Steel)) },
-                        { nameof(materialManager.Bauxite),  (_,__) => RaisePropertyChanged(nameof(Bauxite)) },
-                        { nameof(materialManager.RepairTool),  (_,__) => RaisePropertyChanged(nameof(RepairTool)) },
-                        { nameof(materialManager.ImprovementMaterials),  (_,__) => RaisePropertyChanged(nameof(ImprovementMaterials)) },
-                        { nameof(materialManager.DevelopmentMaterials),  (_,__) => RaisePropertyChanged(nameof(DevelopmentMaterials)) },
-                        { nameof(materialManager.InstantBuildMaterials),  (_,__) => RaisePropertyChanged(nameof(InstantBuildMaterials)) },
+                        { nameof(MaterialManager.Fuel),  (_,__) => RaisePropertyChanged(nameof(Fuel)) },
+                        { nameof(MaterialManager.Ammunition),  (_,__) => RaisePropertyChanged(nameof(Ammunition)) },
+                        { nameof(MaterialManager.Steel),  (_,__) => RaisePropertyChanged(nameof(Steel)) },
+                        { nameof(MaterialManager.Bauxite),  (_,__) => RaisePropertyChanged(nameof(Bauxite)) },
+                        { nameof(MaterialManager.RepairTool),  (_,__) => RaisePropertyChanged(nameof(RepairTool)) },
+                        { nameof(MaterialManager.ImprovementMaterials),  (_,__) => RaisePropertyChanged(nameof(ImprovementMaterials)) },
+                        { nameof(MaterialManager.DevelopmentMaterials),  (_,__) => RaisePropertyChanged(nameof(DevelopmentMaterials)) },
+                        { nameof(MaterialManager.InstantBuildMaterials),  (_,__) => RaisePropertyChanged(nameof(InstantBuildMaterials)) },
                         //{
                         //    // materialManagerの初期化が完了したら、DisplayedPeriodの変更時に更新を行うよう設定
                         //    nameof(materialManager.IsAvailable),
@@ -554,7 +560,7 @@ namespace MaterialChartPlugin.ViewModels
 			// この段階でmaterialManagerの初期化は完了しているので、DisplayedPeriodの変更時に更新を行うよう設定
 			ChartSettings.DisplayedPeriod.Subscribe(___ =>
 			{
-				if(materialManager.IsAvailable)
+				if(MaterialManager.IsAvailable)
 				{
 					RefleshData();
 					RaisePropertyChanged(nameof(DisplayedPeriod));
@@ -567,63 +573,63 @@ namespace MaterialChartPlugin.ViewModels
 				{
 					nameof(this.IsYMinFixedAtZero), (_, __) =>
 					{
-						if (materialManager.Log.HasLoaded)
+						if (MaterialManager.Log.HasLoaded)
 								RefleshData();
 					}
 				},
 				{
 					nameof(this.IsFuelChartEnable), (_, __) =>
 					{
-						if (materialManager.Log.HasLoaded)
+						if (MaterialManager.Log.HasLoaded)
 								RefleshData();
 					}
 				},
 				{
 					nameof(this.IsAmmunitionChartEnable), (_, __) =>
 					{
-						if (materialManager.Log.HasLoaded)
+						if (MaterialManager.Log.HasLoaded)
 								RefleshData();
 					}
 				},
 				{
 					nameof(this.IsSteelChartEnable), (_, __) =>
 					{
-						if (materialManager.Log.HasLoaded)
+						if (MaterialManager.Log.HasLoaded)
 								RefleshData();
 					}
 				},
 				{
 					nameof(this.IsBauxiteChartEnable), (_, __) =>
 					{
-						if (materialManager.Log.HasLoaded)
+						if (MaterialManager.Log.HasLoaded)
 								RefleshData();
 					}
 				},
 				{
 					nameof(this.IsRepairToolChartEnable), (_, __) =>
 					{
-						if (materialManager.Log.HasLoaded)
+						if (MaterialManager.Log.HasLoaded)
 								RefleshData();
 					}
 				},
 				{
 					nameof(this.IsImprovementToolChartEnable), (_, __) =>
 					{
-						if (materialManager.Log.HasLoaded)
+						if (MaterialManager.Log.HasLoaded)
 								RefleshData();
 					}
 				},
 				{
 					nameof(this.IsDevelopmentToolChartEnable), (_, __) =>
 					{
-						if (materialManager.Log.HasLoaded)
+						if (MaterialManager.Log.HasLoaded)
 								RefleshData();
 					}
 				},
 				{
 					nameof(this.IsInstantBuildToolChartEnable), (_, __) =>
 					{
-						if (materialManager.Log.HasLoaded)
+						if (MaterialManager.Log.HasLoaded)
 								RefleshData();
 					}
 				}
@@ -632,17 +638,22 @@ namespace MaterialChartPlugin.ViewModels
 			// データ更新設定
 			Observable.FromEvent<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>
                 (h => (sender, e) => h(e), h => history.CollectionChanged += h, h => history.CollectionChanged -= h)
-                .Where(_ => materialManager.Log.HasLoaded)
+                .Where(_ => MaterialManager.Log.HasLoaded)
                 .Throttle(TimeSpan.FromMilliseconds(10))
                 .Subscribe(_ => UpdateData(history.Last())
 				);
         }
 
-        /// <summary>
-        /// グラフに新しいデータを追加します。
-        /// </summary>
-        /// <param name="newData"></param>
-        public void UpdateData(TimeMaterialsPair newData)
+		private void Split_PropertyChanged(object sender, PropertyChangedEventArgs e)
+		{
+			RaisePropertyChanged();
+		}
+
+		/// <summary>
+		/// グラフに新しいデータを追加します。
+		/// </summary>
+		/// <param name="newData"></param>
+		public void UpdateData(TimeMaterialsPair newData)
         {
             var materialChartVisibleList = new[] { IsFuelChartEnable, IsAmmunitionChartEnable, IsSteelChartEnable, IsBauxiteChartEnable };
             var toolChartVisibleList = new[] { IsRepairToolChartEnable, IsImprovementToolChartEnable, IsDevelopmentToolChartEnable, IsInstantBuildToolChartEnable };
@@ -663,12 +674,12 @@ namespace MaterialChartPlugin.ViewModels
         public void RefleshData()
         {
             // 描画すべきデータがなかったら何もしない
-            if (materialManager.Log.History
+            if (MaterialManager.Log.History
                 .Within(ChartSettings.DisplayedPeriod)
                 .ThinOut(ChartSettings.DisplayedPeriod).Count() == 0)
                 return;
 
-            var neededData = materialManager.Log.History
+            var neededData = MaterialManager.Log.History
                 .Within(ChartSettings.DisplayedPeriod)
                 .ThinOut(ChartSettings.DisplayedPeriod)
                 .ToArray();
@@ -705,8 +716,8 @@ namespace MaterialChartPlugin.ViewModels
 
             var storableLimit = new ObservableCollection<ChartPoint>();
             storableLimit.Add(new ChartPoint(currentDateTime - ChartSettings.DisplayedPeriod.Value.ToTimeSpan(),
-                materialManager.StorableMaterialLimit));
-            storableLimit.Add(new ChartPoint(currentDateTime, materialManager.StorableMaterialLimit));
+                MaterialManager.StorableMaterialLimit));
+            storableLimit.Add(new ChartPoint(currentDateTime, MaterialManager.StorableMaterialLimit));
             this.StorableLimitSeries = storableLimit;
         }
 
@@ -742,8 +753,8 @@ namespace MaterialChartPlugin.ViewModels
             var currentDateTime = neededData[neededData.Length - 1].DateTime;
 
             storableLimit.Add(new ChartPoint(currentDateTime - ChartSettings.DisplayedPeriod.Value.ToTimeSpan(),
-                materialManager.StorableMaterialLimit));
-            storableLimit.Add(new ChartPoint(currentDateTime, materialManager.StorableMaterialLimit));
+                MaterialManager.StorableMaterialLimit));
+            storableLimit.Add(new ChartPoint(currentDateTime, MaterialManager.StorableMaterialLimit));
 
             this.FuelSeries = fuels;
             this.AmmunitionSeries = ammunitions;
@@ -798,7 +809,7 @@ namespace MaterialChartPlugin.ViewModels
 
         public async void ExportAsCsv()
         {
-            await materialManager.Log.ExportAsCsvAsync();
+            await MaterialManager.Log.ExportAsCsvAsync();
         }
 
         public async void ImportMaterialData()
@@ -815,14 +826,19 @@ namespace MaterialChartPlugin.ViewModels
                 var messageBoxResult = MessageBox.Show("インポートすると、現在のデータは上書きされます。\nよろしいですか？", "上書き確認", MessageBoxButton.OKCancel);
                 if (messageBoxResult == MessageBoxResult.OK)
                 {
-                    await materialManager.Log.ImportAsync(fileDialog.FileName);
+                    await MaterialManager.Log.ImportAsync(fileDialog.FileName);
                 }
             }
         }
 
         public async void ExportMaterialData()
         {
-            await materialManager.Log.ExportAsync();
+            await MaterialManager.Log.ExportAsync();
         }
+
+		public void SplitReset()
+		{
+			Split.Reset();
+		}
     }
 }
