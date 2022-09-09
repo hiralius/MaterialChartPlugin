@@ -520,7 +520,6 @@ namespace MaterialChartPlugin.ViewModels
 			RefleshData();
 
 			Split = new SplitInfo(MaterialManager);
-			Split.PropertyChanged += Split_PropertyChanged;
 
 			var history = MaterialManager.Log.History;
 
@@ -643,11 +642,6 @@ namespace MaterialChartPlugin.ViewModels
                 .Subscribe(_ => UpdateData(history.Last())
 				);
         }
-
-		private void Split_PropertyChanged(object sender, PropertyChangedEventArgs e)
-		{
-			RaisePropertyChanged();
-		}
 
 		/// <summary>
 		/// グラフに新しいデータを追加します。
