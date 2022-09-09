@@ -98,20 +98,11 @@ namespace MaterialChartPlugin.Models
 					}
                     onSuccess?.Invoke();
                 }
-                catch (ProtoException ex)
+                catch (Exception ex)
                 {
                     plugin.InvokeNotifyRequested(new Grabacr07.KanColleViewer.Composition.NotifyEventArgs(
                         "MaterialChartPlugin.LoadFailed", "読み込み失敗",
                         "資材データの読み込みに失敗しました。データが破損している可能性があります。"));
-                    System.Diagnostics.Debug.WriteLine(ex);
-                    if (this.History == null)
-                        this.History = new ObservableCollection<TimeMaterialsPair>();
-                }
-                catch (IOException ex)
-                {
-                    plugin.InvokeNotifyRequested(new Grabacr07.KanColleViewer.Composition.NotifyEventArgs(
-                        "MaterialChartPlugin.LoadFailed", "読み込み失敗",
-                        "資材データの読み込みに失敗しました。必要なアクセス権限がない可能性があります。"));
                     System.Diagnostics.Debug.WriteLine(ex);
                     if (this.History == null)
                         this.History = new ObservableCollection<TimeMaterialsPair>();
