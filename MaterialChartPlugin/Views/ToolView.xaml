@@ -16,13 +16,14 @@
              Foreground="{DynamicResource ActiveForegroundBrushKey}"
              mc:Ignorable="d" 
              d:DesignHeight="700" d:DesignWidth="600" d:DataContext="{d:DesignData /SampleData/ToolViewModelSampleData.xaml}">
-    <UserControl.Resources>
+    <UserControl.Resources>		
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="../Styles/PluginStyle.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <converters:SolidBrushToTransparentBrushConverter x:Key="BorderBrushToFillBrushConverter"/>
-            <!-- データポイントを表示しないようにするスタイル（↓ の Simple[Line/Area]SeriesStyleで使用） -->
+			<BooleanToVisibilityConverter x:Key="BoolToVisible" />
+			<!-- データポイントを表示しないようにするスタイル（↓ の Simple[Line/Area]SeriesStyleで使用） -->
             <Style x:Key="EmptyLineDataPointsStyle" TargetType="{x:Type chartingToolkit:LineDataPoint}">
                 <Setter Property="Template" Value="{x:Null}"/>
             </Style>
@@ -142,7 +143,7 @@
             </Style>
         </ResourceDictionary>
     </UserControl.Resources>
-    <ScrollViewer>
+    <ScrollViewer Visibility="{Binding Initialized,Converter={StaticResource BoolToVisible}}">
         <StackPanel Margin="12,0,12,12">
             <Border BorderBrush="{DynamicResource BorderBrushKey}" BorderThickness="0,0,0,1" Padding="0,10" >
                 <WrapPanel VerticalAlignment="Top" Margin="0" HorizontalAlignment="Left">

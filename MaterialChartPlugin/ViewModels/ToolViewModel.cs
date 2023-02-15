@@ -39,9 +39,27 @@ namespace MaterialChartPlugin.ViewModels
 
         public int InstantBuildMaterials => MaterialManager.InstantBuildMaterials;
 
+		#region Initialized変更通知プロパティ
+		private bool _Initialized = false;
 
-        #region FuelSeries変更通知プロパティ
-        private ObservableCollection<ChartPoint> _FuelSeries = new ObservableCollection<ChartPoint>();
+		public bool Initialized
+		{
+			get
+			{
+				return _Initialized;
+			}
+			set
+			{
+				if (_Initialized == value)
+					return;
+				_Initialized = value;
+				RaisePropertyChanged();
+			}
+		}
+		#endregion
+
+		#region FuelSeries変更通知プロパティ
+		private ObservableCollection<ChartPoint> _FuelSeries = new ObservableCollection<ChartPoint>();
 
         public ObservableCollection<ChartPoint> FuelSeries
         {
@@ -641,6 +659,7 @@ namespace MaterialChartPlugin.ViewModels
                 .Throttle(TimeSpan.FromMilliseconds(10))
                 .Subscribe(_ => UpdateData(history.Last())
 				);
+			Initialized = true;
         }
 
 		/// <summary>
